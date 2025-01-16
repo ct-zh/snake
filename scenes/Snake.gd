@@ -71,7 +71,15 @@ func move():
 	var food = get_node("/root/Main/Food")
 	if food:
 		var food_pos = food.position / cell_size  # 将食物位置转换为网格坐标
-		if new_head_pos == food_pos:  # 直接比较网格坐标
+		var head_pos = new_head_pos  # 蛇头网格坐标
+		
+		# 添加调试打印
+		print("Snake head position: ", head_pos)
+		print("Food position: ", food_pos)
+		print("Raw food position: ", food.position)
+		
+		if head_pos == food_pos:  # 直接比较网格坐标
+			print("Collision detected!")  # 添加碰撞确认打印
 			growing = true
 			food.queue_free()
 			get_parent().spawn_food()
