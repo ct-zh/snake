@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5elfcfhgivdl"]
+
+[ext_resource type="Script" path="res://scenes/Main.gd" id="1_xxxxx"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_xxxxx")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(640, 480)
+color = Color(0.2, 0.2, 0.2, 1)
