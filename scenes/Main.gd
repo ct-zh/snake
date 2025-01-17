@@ -42,19 +42,31 @@ func get_random_position():
 	var snake = $GameArea/Snake
 	var pos
 	var valid = false
+	var border_margin = 1  # 边界安全距离
 	
 	while !valid:
 		valid = true
+		# 生成位置时避开边界
 		pos = Vector2(
-			randi() % int(grid_size.x),
-			randi() % int(grid_size.y)
+			randi() % int(grid_size.x - 2 * border_margin) + border_margin,
+			randi() % int(grid_size.y - 2 * border_margin) + border_margin
 		)
 		
-		# 检查是否与蛇身重叠
+		# 检查是否与蛇重叠（包括头部和身体）
 		if snake:
+			# 检查蛇头
+			var head_pos = snake.body[0].position / cell_size if snake.body.size() > 0 else Vector2(-1, -1)
+			if pos == head_pos:
+				valid = false
+				continue
+				
+			# 检查蛇身
 			for segment in snake.body:
-				if segment.position == pos * cell_size:
+				var segment_pos = segment.position / cell_size
+				# 检查是否与蛇身重叠或太近
+				if (pos - segment_pos).length() <= 1:  # 如果距离小于等于1个格子，认为太近
 					valid = false
 					break
 	
+	print("生成食物位置：", pos, " (避开边界和蛇身)")
 	return pos 

@@ -10,7 +10,7 @@ var move_delay = 0.2
 # 添加网格相关变量
 var cell_size = 32
 var grid_size = Vector2(20, 15)
-var collision_tolerance = 0.3  # 碰撞容差，值越大越容易触发碰撞
+var collision_tolerance = 0.5  # 碰撞容差，值越大越容易触发碰撞
 
 # 添加音效
 var eat_sound
@@ -31,12 +31,36 @@ func _ready():
 	var head = create_segment(Vector2(5, 5))
 	body.append(head)
 
+func create_head_segment(pos):
+	var segment = ColorRect.new()
+	segment.size = Vector2(30, 30)  # 稍小于格子大小，留出边框
+	segment.position = pos * cell_size  # 使用cell_size变量
+	segment.color = Color(0, 0.8, 0, 1)  # 蛇头使用稍浅的绿色
+	add_child(segment)
+	
+	# 添加更明显的呼吸效果
+	var tween = create_tween()
+	tween.tween_property(segment, "scale", Vector2(1.3, 1.3), 0.4)  # 增加缩放范围，减少时间
+	tween.tween_property(segment, "scale", Vector2(0.9, 0.9), 0.4)  # 缩小到比1更小
+	tween.set_loops()
+	
+	return segment
+
 func create_segment(pos):
 	var segment = ColorRect.new()
 	segment.size = Vector2(30, 30)  # 稍小于格子大小，留出边框
 	segment.position = pos * cell_size  # 使用cell_size变量
 	segment.color = Color.GREEN
 	add_child(segment)
+	
+	# 如果是新的蛇头（第一个片段），添加呼吸效果
+	if body.size() == 0:  # 当前还没有身体片段，说明这是蛇头
+		var tween = create_tween()
+		tween.tween_property(segment, "scale", Vector2(1.3, 1.3), 0.4)  # 增加缩放范围，减少时间
+		tween.tween_property(segment, "scale", Vector2(0.9, 0.9), 0.4)  # 缩小到比1更小
+		tween.set_loops()  # 设置循环
+		segment.color = Color(0, 0.8, 0, 1)  # 蛇头设置为稍浅的绿色
+	
 	return segment
 
 func _process(delta):
@@ -77,24 +101,24 @@ func move():
 	# 检查食物碰撞
 	var food = get_node("/root/Main/GameArea/Food")
 	if food:
-		var food_pos = food.position / cell_size  # 将食物位置转换为网格坐标
-		var head_pos = new_head_pos  # 蛇头网格坐标
+		# var food_pos = food.position / cell_size  # 将食物位置转换为网格坐标
+		# var head_pos = new_head_pos  # 蛇头网格坐标
 		
 		# 添加详细的调试信息
-		print("\n===== 碰撞检测信息 =====")
-		print("蛇头:")
-		print("  - 网格坐标: ", head_pos)
-		print("  - 实际位置: ", body[0].position if body.size() > 0 else "无")
-		print("  - 下一步网格坐标: ", new_head_pos)
-		print("  - 下一步实际位置: ", new_head_pos * cell_size)
-		print("食物:")
-		print("  - 网格坐标: ", food_pos)
-		print("  - 实际位置: ", food.position)
-		print("  - 网格计算: ", food.position, " / ", cell_size, " = ", food_pos)
-		print("距离差:")
-		print("  - 网格差异: ", head_pos - food_pos)
-		print("  - 实际位置差异: ", (body[0].position if body.size() > 0 else Vector2.ZERO) - food.position)
-		print("  - 碰撞容差: ", collision_tolerance)
+		# print("\n===== 碰撞检测信息 =====")
+		# print("蛇头:")
+		# print("  - 网格坐标: ", head_pos)
+		# print("  - 实际位置: ", body[0].position if body.size() > 0 else "无")
+		# print("  - 下一步网格坐标: ", new_head_pos)
+		# print("  - 下一步实际位置: ", new_head_pos * cell_size)
+		# print("食物:")
+		# print("  - 网格坐标: ", food_pos)
+		# print("  - 实际位置: ", food.position)
+		# print("  - 网格计算: ", food.position, " / ", cell_size, " = ", food_pos)
+		# print("距离差:")
+		# print("  - 网格差异: ", head_pos - food_pos)
+		# print("  - 实际位置差异: ", (body[0].position if body.size() > 0 else Vector2.ZERO) - food.position)
+		# print("  - 碰撞容差: ", collision_tolerance)
 		
 		# 使用新的碰撞检测方法
 		if is_close_enough(new_head_pos * cell_size, food.position):
@@ -115,7 +139,7 @@ func move():
 				ui.update_score(body.size())
 	
 	# 移动身体
-	var new_head = create_segment(new_head_pos)
+	var new_head = create_head_segment(new_head_pos)  # 使用新的方法创建蛇头
 	body.push_front(new_head)
 	
 	# 检查自身碰撞
@@ -131,8 +155,18 @@ func move():
 		growing = false
 
 func game_over():
+	print("\n===== 游戏结束 =====")
+	
 	die_sound.play()
-	var ui = get_tree().get_root().get_node("Main/UI")
+	var ui = get_node("/root/Main/UILayer/UI")
 	if ui:
+		print("UI状态：")
+		print("  - UI节点: 已找到")
+		print("  - 最终分数: ", body.size())
 		ui.show_game_over()
+	else:
+		print("UI状态：")
+		print("  - UI节点: 未找到")
+	
+	print("停止游戏处理")
 	set_process(false)  # 停止处理输入
